@@ -112,11 +112,7 @@ include 'includes/sidebar_admin_kepsek.php';
                                                     <td><span class="fw-bold text-primary"><?php echo htmlspecialchars($row['no_pendaftaran']); ?></span></td>
                                                     <td><?php echo htmlspecialchars($row['nama_lengkap']); ?></td>
                                                     <td>
-                                                        <?php if ($row['status_pembayaran']): ?>
-                                                            <span class="badge bg-amber-soft px-3 py-2 rounded-pill">
-                                                                <i class="fas fa-money-bill-wave me-1"></i> Tunai (Sekolah)
-                                                            </span>
-                                                        <?php elseif ($row['status_pembayaran'] == 'Lunas'): ?>
+                                                        <?php if ($row['status_pembayaran'] == 'Lunas'): ?>
                                                             <span class="badge bg-indigo-soft px-3 py-2 rounded-pill">
                                                                 <i class="fas fa-bolt me-1"></i> Online (Midtrans)
                                                             </span>

@@ -133,6 +133,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         if (!$stmt->execute()) { throw new Exception("Error Simpan: " . $stmt->error); }
         $pendaftar_id = $conn->insert_id; 
+        
+        $conn->query("INSERT INTO pendaftar_status (id_pendaftar) VALUES ($pendaftar_id)");
         $conn->query("UPDATE users SET id_pendaftar = $pendaftar_id WHERE id_user = $user_id");
         $conn->commit();
         header("Location: dashboard.php?status=success_ppdb");

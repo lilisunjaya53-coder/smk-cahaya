@@ -37,7 +37,7 @@ if ($result_statistik) {
 // =========================================================
 $sql_status = "SELECT status_verifikasi, 
                       COUNT(id_pendaftar) AS total_status
-               FROM pendaftar
+               FROM pendaftar_status
                GROUP BY status_verifikasi";
                
 $result_status = $conn->query($sql_status);

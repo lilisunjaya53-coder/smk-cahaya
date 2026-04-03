@@ -25,7 +25,7 @@ $id_pendaftar = $student_data['id_pendaftar'] ?? null;
 if (isset($_GET['status'])) {
     if ($_GET['status'] == 'success') {
         // Update database secara instan saat user kembali ke halaman ini
-        $sql_lunas = "UPDATE pendaftar SET status_pembayaran = 'Lunas' WHERE id_pendaftar = ?";
+        $sql_lunas = "UPDATE pendaftar_status SET status_pembayaran = 'Lunas' WHERE id_pendaftar = ?";
         $stmt_lunas = $conn->prepare($sql_lunas);
         $stmt_lunas->bind_param("i", $id_pendaftar);
         

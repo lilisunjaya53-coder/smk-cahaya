@@ -20,21 +20,21 @@ try {
 
     if ($transaction == 'settlement') {
         // PEMBAYARAN BERHASIL/LUNAS
-        $sql = "UPDATE pendaftar SET status_pembayaran = 'Lunas' WHERE id_pendaftar = ?";
+        $sql = "UPDATE pendaftar_status SET status_pembayaran = 'Lunas' WHERE id_pendaftar = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $id_pendaftar);
         $stmt->execute();
         
     } else if ($transaction == 'pending') {
         // PEMBAYARAN MENUNGGU PEMBAYARAN
-        $sql = "UPDATE pendaftar SET status_pembayaran = 'Menunggu Verifikasi' WHERE id_pendaftar = ?";
+        $sql = "UPDATE pendaftar_status SET status_pembayaran = 'Menunggu Verifikasi' WHERE id_pendaftar = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $id_pendaftar);
         $stmt->execute();
 
     } else if ($transaction == 'expire' || $transaction == 'cancel') {
         // PEMBAYARAN GAGAL/EXPIRED
-        $sql = "UPDATE pendaftar SET status_pembayaran = 'Belum Bayar' WHERE id_pendaftar = ?";
+        $sql = "UPDATE pendaftar_status SET status_pembayaran = 'Belum Bayar' WHERE id_pendaftar = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $id_pendaftar);
         $stmt->execute();

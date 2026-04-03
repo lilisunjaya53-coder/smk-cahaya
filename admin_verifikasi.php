@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     $status_valid = ['Diverifikasi', 'Ditolak', 'Menunggu Verifikasi', 'Diverifikasi Admin'];
     
     if ($pendaftar_id > 0 && in_array($status_baru, $status_valid)) {
-        $sql_update = "UPDATE pendaftar SET status_verifikasi = ? WHERE id_pendaftar = ?";
+        $sql_update = "UPDATE pendaftar_status SET status_verifikasi = ? WHERE id_pendaftar = ?";
         $stmt_update = $conn->prepare($sql_update);
         $stmt_update->bind_param("si", $status_baru, $pendaftar_id);
         if ($stmt_update->execute()) { $update_success = true; }
@@ -33,11 +33,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
 }
 
 // Ambil data dengan urutan: Menunggu -> Verif Admin -> Diterima -> Ditolak
-$sql = "SELECT p.id_pendaftar, p.no_pendaftaran, p.nama_lengkap, p.status_verifikasi, 
+$sql = "SELECT p.id_pendaftar, p.no_pendaftaran, p.nama_lengkap, ps.status_verifikasi, 
                j.singkatan AS pilihan_keahlian
         FROM pendaftar p
+        LEFT JOIN pendaftar_status ps ON p.id_pendaftar = ps.id_pendaftar 
         LEFT JOIN jurusan j ON p.id_jurusan_pilihan = j.id_jurusan 
-        ORDER BY FIELD(p.status_verifikasi, 'Menunggu Verifikasi', 'Diverifikasi Admin', 'Diverifikasi', 'Ditolak'), 
+        ORDER BY FIELD(ps.status_verifikasi, 'Menunggu Verifikasi', 'Diverifikasi Admin', 'Diverifikasi', 'Ditolak'), 
                  p.tgl_daftar ASC"; 
 
 $result = $conn->query($sql);

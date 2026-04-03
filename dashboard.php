@@ -28,14 +28,14 @@ include 'includes/header.php';
 if (isAdmin() || isKepsek()): 
     $conn_stats = connectDB();
     
-    $sql_accepted_admin = "SELECT COUNT(id_pendaftar) AS total FROM pendaftar WHERE status_verifikasi = 'Diverifikasi'";
+    $sql_accepted_admin = "SELECT COUNT(id_pendaftar) AS total FROM pendaftar_status WHERE status_verifikasi = 'Diverifikasi'";
     $total_accepted_admin = $conn_stats->query($sql_accepted_admin)->fetch_assoc()['total'];
 
-    $sql_pending_admin = "SELECT COUNT(id_pendaftar) AS total FROM pendaftar WHERE status_verifikasi = 'Menunggu Verifikasi'";
+    $sql_pending_admin = "SELECT COUNT(id_pendaftar) AS total FROM pendaftar_status WHERE status_verifikasi = 'Menunggu Verifikasi'";
     $total_pending_admin = $conn_stats->query($sql_pending_admin)->fetch_assoc()['total'];
 
     // QUERY TAMBAHAN: MENGHITUNG SISWA DITOLAK
-    $sql_rejected_admin = "SELECT COUNT(id_pendaftar) AS total FROM pendaftar WHERE status_verifikasi = 'Ditolak'";
+    $sql_rejected_admin = "SELECT COUNT(id_pendaftar) AS total FROM pendaftar_status WHERE status_verifikasi = 'Ditolak'";
     $total_rejected_admin = $conn_stats->query($sql_rejected_admin)->fetch_assoc()['total'];
 
     $sql_total_all = "SELECT COUNT(id_pendaftar) AS total FROM pendaftar";
@@ -50,8 +50,9 @@ if (isAdmin() || isKepsek()):
                     j.singkatan AS jurusan, 
                     COUNT(p.id_pendaftar) AS total_jurusan
                   FROM pendaftar p
+                  JOIN pendaftar_status ps ON p.id_pendaftar = ps.id_pendaftar
                   JOIN jurusan j ON p.id_jurusan_pilihan = j.id_jurusan
-                  WHERE p.status_verifikasi = 'Diverifikasi'
+                  WHERE ps.status_verifikasi = 'Diverifikasi'
                   GROUP BY j.singkatan
                   ORDER BY total_jurusan DESC";
 
@@ -206,7 +207,7 @@ if (isAdmin() || isKepsek()):
 
     if ($is_filled) {
         $conn_status = connectDB();
-        $sql_status = "SELECT no_pendaftaran, status_verifikasi FROM pendaftar WHERE id_pendaftar = ?";
+        $sql_status = "SELECT p.no_pendaftaran, ps.status_verifikasi FROM pendaftar p JOIN pendaftar_status ps ON p.id_pendaftar = ps.id_pendaftar WHERE p.id_pendaftar = ?";
         $stmt_status = $conn_status->prepare($sql_status);
         $stmt_status->bind_param("i", $pendaftar_id);
         $stmt_status->execute();

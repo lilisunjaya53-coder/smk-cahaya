@@ -68,14 +68,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         $rekomendasi = trim($_POST['rekomendasi'] ?? '');
         
         try {
-            $sql_update = "UPDATE pendaftar SET 
+            $sql_update_pendaftar = "UPDATE pendaftar SET 
                             nama_lengkap = ?, nama_panggilan = ?, nik_siswa = ?, jenis_kelamin = ?, tempat_lahir = ?, tgl_lahir = ?, 
                             agama = ?, status_yatim = ?, asal_sd = ?, alamat_sd = ?, asal_sekolah = ?, alamat_sekolah = ?, no_hp_siswa = ?, 
                             alamat_siswa = ?, nama_ayah = ?, nik_ayah = ?, pekerjaan_ayah = ?, nama_ibu = ?, nik_ibu = ?, pekerjaan_ibu = ?, 
-                            nama_wali = ?, hubungan_wali = ?, id_jurusan_pilihan = ?, rekomendasi = ?, status_verifikasi = 'Menunggu Verifikasi (Revisi)' 
+                            nama_wali = ?, hubungan_wali = ?, id_jurusan_pilihan = ?, rekomendasi = ? 
                             WHERE id_pendaftar = ?";
                             
-            $stmt = $conn->prepare($sql_update);
+            $stmt = $conn->prepare($sql_update_pendaftar);
             $stmt->bind_param("sssssssssssssssssssssiisi", 
                 $nama_lengkap, $nama_panggilan, $nik_siswa, $jenis_kelamin, $tempat_lahir, $tgl_lahir, 
                 $agama, $status_yatim, $asal_sd, $alamat_sd, $asal_sekolah, $alamat_sekolah, $no_hp_siswa, 
@@ -86,6 +86,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
             
             if (!$stmt->execute()) { throw new Exception("Update Gagal: " . $stmt->error); }
             $stmt->close();
+
+            $sql_update_status = "UPDATE pendaftar_status SET status_verifikasi = 'Menunggu Verifikasi (Revisi)' WHERE id_pendaftar = ?";
+            $stmt_status = $conn->prepare($sql_update_status);
+            $stmt_status->bind_param("i", $student_data['id_pendaftar']);
+            $stmt_status->execute();
+            $stmt_status->close();
             header("Location: riwayat_pendaftaran.php?status=updated");
             exit;
         } catch (Exception $e) {

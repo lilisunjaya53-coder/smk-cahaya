@@ -21,10 +21,11 @@ $role_siswa_id = $role_siswa_result['id_role'] ?? 0;
 // JOIN users, user_roles, dan pendaftar
 $sql = "SELECT 
             u.id_user, u.username, u.nama_lengkap, u.id_pendaftar,
-            p.no_pendaftaran, p.status_verifikasi
+            p.no_pendaftaran, ps.status_verifikasi
         FROM users u
         JOIN user_roles ur ON u.id_user = ur.user_id
         LEFT JOIN pendaftar p ON u.id_pendaftar = p.id_pendaftar
+        LEFT JOIN pendaftar_status ps ON u.id_pendaftar = ps.id_pendaftar
         WHERE ur.role_id = ?
         ORDER BY u.username ASC"; 
 

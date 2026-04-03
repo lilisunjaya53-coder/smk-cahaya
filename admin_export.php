@@ -22,13 +22,14 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 // 4. Query Ambil SEMUA Kolom
-$sql = "SELECT p.*, j.nama_keahlian 
+$sql = "SELECT p.*, ps.status_verifikasi, ps.status_pembayaran, ps.midtrans_transaction_id, j.nama_keahlian 
         FROM pendaftar p 
+        LEFT JOIN pendaftar_status ps ON p.id_pendaftar = ps.id_pendaftar
         LEFT JOIN jurusan j ON p.id_jurusan_pilihan = j.id_jurusan";
 
 if ($status_filter !== 'all') {
     $safe_status = $conn->real_escape_string($status_filter);
-    $sql .= " WHERE p.status_verifikasi = '$safe_status'";
+    $sql .= " WHERE ps.status_verifikasi = '$safe_status'";
 }
 
 $sql .= " ORDER BY p.id_pendaftar ASC";

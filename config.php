@@ -163,6 +163,9 @@ function getStudentFullData($conn, $id_user) {
     $sql = "SELECT u.username, u.nama_lengkap AS user_nama, 
                    p.*, ps.*, j.nama_keahlian FROM users u
             JOIN pendaftar p ON u.id_pendaftar = p.id_pendaftar
+            JOIN pendaftar_ortu po ON p.id_pendaftar = po.id_pendaftar
+            JOIN pendaftar_berkas pb ON p.id_pendaftar = pb.id_pendaftar
+            JOIN pendaftar_pendidikan pp ON p.id_pendaftar = pp.id_pendaftar
             JOIN jurusan j ON j.id_jurusan = p.id_jurusan_pilihan
             JOIN pendaftar_status ps on p.id_pendaftar = ps.id_pendaftar
             WHERE u.id_user = ?";

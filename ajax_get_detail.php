@@ -7,8 +7,11 @@ $id = (int)($_GET['id'] ?? 0);
 $conn = connectDB();
 
 // Query mengambil semua kolom sesuai struktur tabel pendaftar terbaru
-$sql = "SELECT p.*, j.nama_keahlian 
+$sql = "SELECT p.*, po.*, pb.*, pp.*, j.nama_keahlian 
         FROM pendaftar p 
+        JOIN pendaftar_ortu po ON p.id_pendaftar = po.id_pendaftar
+        JOIN pendaftar_berkas pb ON p.id_pendaftar = pb.id_pendaftar
+        JOIN pendaftar_pendidikan pp ON p.id_pendaftar = pp.id_pendaftar
         LEFT JOIN jurusan j ON p.id_jurusan_pilihan = j.id_jurusan 
         WHERE p.id_pendaftar = ?";
 $stmt = $conn->prepare($sql);
@@ -23,21 +26,54 @@ if (!$data) {
 ?>
 
 <style>
-    .detail-container { padding: 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .section-header { 
-        background: #f8f9fc; 
-        padding: 10px 15px; 
-        border-left: 5px solid #4e73df; 
-        font-weight: 800; 
-        color: #4e73df; 
-        margin-bottom: 20px; 
+    .detail-container {
+        padding: 10px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .section-header {
+        background: #f8f9fc;
+        padding: 10px 15px;
+        border-left: 5px solid #4e73df;
+        font-weight: 800;
+        color: #4e73df;
+        margin-bottom: 20px;
         text-transform: uppercase;
         font-size: 0.9rem;
     }
-    .info-label { font-weight: 700; color: #858796; font-size: 0.72rem; text-transform: uppercase; margin-bottom: 2px; display: block; }
-    .info-value { color: #2e3750; font-weight: 600; font-size: 0.95rem; border-bottom: 1px solid #eaecf4; padding-bottom: 5px; margin-bottom: 15px; display: block; }
-    .img-pendaftar { border-radius: 12px; border: 5px solid #fff; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); width: 100%; max-width: 220px; }
-    .doc-btn { transition: 0.2s; border-radius: 8px; font-weight: 600; }
+
+    .info-label {
+        font-weight: 700;
+        color: #858796;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        display: block;
+    }
+
+    .info-value {
+        color: #2e3750;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border-bottom: 1px solid #eaecf4;
+        padding-bottom: 5px;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .img-pendaftar {
+        border-radius: 12px;
+        border: 5px solid #fff;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        width: 100%;
+        max-width: 220px;
+    }
+
+    .doc-btn {
+        transition: 0.2s;
+        border-radius: 8px;
+        font-weight: 600;
+    }
 </style>
 
 <div class="detail-container">
@@ -57,7 +93,7 @@ if (!$data) {
 
             <span class="info-label mb-2">Dokumen Terlampir</span>
             <div class="d-grid gap-2">
-                <?php 
+                <?php
                 $berkas = [
                     'kk_file' => ['label' => 'Kartu Keluarga', 'icon' => 'fa-users'],
                     'ktp_ortu_file' => ['label' => 'KTP Orang Tua', 'icon' => 'fa-id-card'],
@@ -65,10 +101,11 @@ if (!$data) {
                     'skl_file' => ['label' => 'SKL SMP/MTs', 'icon' => 'fa-file-alt'] // DITAMBAHKAN
                 ];
                 foreach ($berkas as $key => $val): if (!empty($data[$key])): ?>
-                    <a href="uploads/<?php echo $data[$key]; ?>" target="_blank" class="btn btn-sm btn-outline-primary doc-btn text-start">
-                        <i class="fas <?php echo $val['icon']; ?> me-2"></i> <?php echo $val['label']; ?>
-                    </a>
-                <?php endif; endforeach; ?>
+                        <a href="uploads/<?php echo $data[$key]; ?>" target="_blank" class="btn btn-sm btn-outline-primary doc-btn text-start">
+                            <i class="fas <?php echo $val['icon']; ?> me-2"></i> <?php echo $val['label']; ?>
+                        </a>
+                <?php endif;
+                endforeach; ?>
             </div>
         </div>
 
@@ -131,7 +168,7 @@ if (!$data) {
                 </div>
                 <div class="col-md-6">
                     <span class="info-label">Asal SMP/MTs</span>
-                    <span class="info-value"><?php echo $data['asal_sekolah'] ?: '-'; ?></span>
+                    <span class="info-value"><?php echo $data['asal_smp'] ?: '-'; ?></span>
                 </div>
                 <div class="col-md-6">
                     <span class="info-label">Alamat SD/MI</span>
@@ -139,7 +176,7 @@ if (!$data) {
                 </div>
                 <div class="col-md-6">
                     <span class="info-label">Alamat SMP/MTs</span>
-                    <span class="info-value"><?php echo $data['alamat_sekolah'] ?: '-'; ?></span>
+                    <span class="info-value"><?php echo $data['alamat_smp'] ?: '-'; ?></span>
                 </div>
             </div>
 
@@ -167,12 +204,12 @@ if (!$data) {
                         <h5 class="fw-bold mb-0 text-dark"><?php echo $data['nama_keahlian'] ?: 'Belum Memilih'; ?></h5>
                     </div>
                 </div>
-                <div class="col-md-6">
-                     <div class="p-3 bg-light border rounded-3 text-center shadow-sm">
+                <!-- <div class="col-md-6">
+                    <div class="p-3 bg-light border rounded-3 text-center shadow-sm">
                         <span class="info-label">Informasi Dari:</span>
                         <h5 class="fw-bold mb-0 text-dark"><?php echo $data['rekomendasi'] ?: '-'; ?></h5>
                     </div>
-                </div>
+                </div> -->
             </div>
 
         </div>

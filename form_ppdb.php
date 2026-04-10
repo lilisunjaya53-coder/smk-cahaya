@@ -110,29 +110,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $tgl_daftar = date('Y-m-d');
         $user_id = $currentUser['id_user'];
         
-        // 3. Query Insert Sinkron 100% (Menambahkan skl_file)
+        // 3. Query Insert Data Pokok Pendaftar
         $sql_pendaftar = "INSERT INTO pendaftar (
             no_pendaftaran, tgl_daftar, nama_lengkap, nama_panggilan, nik_siswa, nisn, 
             jenis_kelamin, tempat_lahir, tgl_lahir, agama, status_yatim, 
-            asal_sd, alamat_sd, asal_sekolah, alamat_sekolah, 
-            no_hp_siswa, alamat_siswa, nama_ayah, nik_ayah, pekerjaan_ayah, 
-            nama_ibu, nik_ibu, pekerjaan_ibu, nama_wali, hubungan_wali, 
-            id_jurusan_pilihan, kk_file, ktp_ortu_file, ijazah_sd_file, skl_file, foto_file, rekomendasi
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            no_hp_siswa, alamat_siswa, id_jurusan_pilihan
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql_pendaftar);
-        $stmt->bind_param("sssssssssssssssssssssssssissssss", 
+        $stmt->bind_param("sssssssssssssi", 
             $no_pendaftaran, $tgl_daftar, $nama_lengkap, $nama_panggilan, $nik_siswa, $nisn,
             $jenis_kelamin, $tempat_lahir, $tgl_lahir, $agama, $status_yatim, 
-            $asal_sd, $alamat_sd, $asal_sekolah, $alamat_sekolah,
-            $no_hp_siswa, $alamat_siswa, $nama_ayah, $nik_ayah, $pekerjaan_ayah,
-            $nama_ibu, $nik_ibu, $pekerjaan_ibu, $nama_wali, $hubungan_wali,
-            $id_jurusan_pilihan, $uploaded_paths['kk_file'], $uploaded_paths['ktp_ortu_file'], 
-            $uploaded_paths['ijazah_sd_file'], $uploaded_paths['skl_file'], $uploaded_paths['foto_file'], $rekomendasi
+            $no_hp_siswa, $alamat_siswa, $id_jurusan_pilihan
         );
         
-        if (!$stmt->execute()) { throw new Exception("Error Simpan: " . $stmt->error); }
+        if (!$stmt->execute()) { throw new Exception("Error Simpan Data Siswa: " . $stmt->error); }
         $pendaftar_id = $conn->insert_id; 
+
+        // 4. Query Insert Pendaftar Ortu
+        $sql_ortu = "INSERT INTO pendaftar_ortu (id_pendaftar, nama_ayah, nik_ayah, pekerjaan_ayah, nama_ibu, nik_ibu, pekerjaan_ibu, nama_wali, hubungan_wali) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt_ortu = $conn->prepare($sql_ortu);
+        $stmt_ortu->bind_param("issssssss", $pendaftar_id, $nama_ayah, $nik_ayah, $pekerjaan_ayah, $nama_ibu, $nik_ibu, $pekerjaan_ibu, $nama_wali, $hubungan_wali);
+        if (!$stmt_ortu->execute()) { throw new Exception("Error Simpan Data Orang Tua: " . $stmt_ortu->error); }
+
+        // 5. Query Insert Pendaftar Berkas
+        $sql_berkas = "INSERT INTO pendaftar_berkas (id_pendaftar, kk_file, ktp_ortu_file, ijazah_sd_file, skl_file, foto_file) VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt_berkas = $conn->prepare($sql_berkas);
+        $stmt_berkas->bind_param("isssss", $pendaftar_id, $uploaded_paths['kk_file'], $uploaded_paths['ktp_ortu_file'], $uploaded_paths['ijazah_sd_file'], $uploaded_paths['skl_file'], $uploaded_paths['foto_file']);
+        if (!$stmt_berkas->execute()) { throw new Exception("Error Simpan Dokumen Berkas: " . $stmt_berkas->error); }
+
+        // 6. Query Insert Pendaftar Pendidikan (Using asal_smp and alamat_smp)
+        $sql_pendidikan = "INSERT INTO pendaftar_pendidikan (id_pendaftar, asal_sd, alamat_sd, asal_smp, alamat_smp) VALUES (?, ?, ?, ?, ?)";
+        $stmt_pendidikan = $conn->prepare($sql_pendidikan);
+        $stmt_pendidikan->bind_param("issss", $pendaftar_id, $asal_sd, $alamat_sd, $asal_sekolah, $alamat_sekolah);
+        if (!$stmt_pendidikan->execute()) { throw new Exception("Error Simpan Riwayat Pendidikan: " . $stmt_pendidikan->error); }
         
         $conn->query("INSERT INTO pendaftar_status (id_pendaftar) VALUES ($pendaftar_id)");
         $conn->query("UPDATE users SET id_pendaftar = $pendaftar_id WHERE id_user = $user_id");

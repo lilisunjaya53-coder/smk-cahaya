@@ -25,7 +25,7 @@ CREATE TABLE pendaftar_berkas (
     ijazah_sd_file VARCHAR(255),
     skl_file VARCHAR(255),
     foto_file VARCHAR(255),
-    bukti_pembayaran VARCHAR(255),
+    -- bukti_pembayaran VARCHAR(255),
     FOREIGN KEY (id_pendaftar) REFERENCES pendaftar(id_pendaftar) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -47,8 +47,8 @@ SELECT id_pendaftar, nama_ayah, nik_ayah, pekerjaan_ayah, nama_ibu, nik_ibu, pek
 FROM pendaftar;
 
 -- Migrate Documents Data
-INSERT INTO pendaftar_berkas (id_pendaftar, kk_file, ktp_ortu_file, ijazah_sd_file, skl_file, foto_file, bukti_pembayaran)
-SELECT id_pendaftar, kk_file, ktp_ortu_file, ijazah_sd_file, skl_file, foto_file, bukti_pembayaran
+INSERT INTO pendaftar_berkas (id_pendaftar, kk_file, ktp_ortu_file, ijazah_sd_file, skl_file, foto_file)
+SELECT id_pendaftar, kk_file, ktp_ortu_file, ijazah_sd_file, skl_file, foto_file
 FROM pendaftar;
 
 -- Migrate Education Data
@@ -71,7 +71,7 @@ DROP COLUMN ktp_ortu_file,
 DROP COLUMN ijazah_sd_file,
 DROP COLUMN skl_file,
 DROP COLUMN foto_file,
-DROP COLUMN bukti_pembayaran,
+-- DROP COLUMN bukti_pembayaran,
 DROP COLUMN asal_sd,
 DROP COLUMN alamat_sd,
 DROP COLUMN asal_sekolah,

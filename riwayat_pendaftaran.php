@@ -2,14 +2,14 @@
 require_once 'config.php';
 
 // Keamanan & Otorisasi
-checkAuth(); 
+checkAuth();
 if (!isSiswa()) {
     header("Location: dashboard.php");
     exit;
 }
 
 $conn = connectDB();
-$currentUser = getCurrentUser(); 
+$currentUser = getCurrentUser();
 $id_user = $currentUser['id_user'];
 $is_filled = !is_null($currentUser['id_pendaftar']);
 $read_only = true;
@@ -21,7 +21,7 @@ if (!$is_filled) {
     exit;
 }
 
-$student_data = getStudentFullData($conn, $id_user); 
+$student_data = getStudentFullData($conn, $id_user);
 $status_verifikasi = $student_data['status_verifikasi'] ?? 'Menunggu Pengumuman';
 
 $display_status = $status_verifikasi;
@@ -32,7 +32,7 @@ if ($status_verifikasi == 'Diverifikasi' || $status_verifikasi == 'Terverifikasi
 }
 
 $allowed_to_edit = in_array($status_verifikasi, [
-    'Menunggu Verifikasi', 
+    'Menunggu Verifikasi',
     'Menunggu Verifikasi (Revisi)'
 ]);
 
@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         $nama_lengkap = trim($_POST['nama_lengkap'] ?? '');
         $nama_panggilan = trim($_POST['nama_panggilan'] ?? '');
         $nik_siswa = trim($_POST['nik_siswa'] ?? '');
-        $nisn = trim($_POST['nisn'] ?? ''); 
+        $nisn = trim($_POST['nisn'] ?? '');
         $jenis_kelamin = $_POST['jenis_kelamin'] ?? '';
         $tempat_lahir = trim($_POST['tempat_lahir'] ?? '');
         $tgl_lahir = $_POST['tgl_lahir'] ?? '';
@@ -52,8 +52,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         $status_yatim = $_POST['status_yatim'] ?? 'Tidak';
         $asal_sd = trim($_POST['asal_sd'] ?? '');
         $alamat_sd = trim($_POST['alamat_sd'] ?? '');
-        $asal_sekolah = trim($_POST['asal_sekolah'] ?? '');
-        $alamat_sekolah = trim($_POST['alamat_sekolah'] ?? '');
+        $asal_smp = trim($_POST['asal_smp'] ?? '');
+        $alamat_smp = trim($_POST['alamat_smp'] ?? '');
         $no_hp_siswa = trim($_POST['no_hp_siswa'] ?? '');
         $alamat_siswa = trim($_POST['alamat_siswa'] ?? '');
         $nama_ayah = trim($_POST['nama_ayah'] ?? '');
@@ -66,25 +66,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         $hubungan_wali = trim($_POST['hubungan_wali'] ?? '');
         $id_jurusan_pilihan = $_POST['id_jurusan_pilihan'] ?? '';
         $rekomendasi = trim($_POST['rekomendasi'] ?? '');
-        
+
         try {
             $sql_update_pendaftar = "UPDATE pendaftar SET 
                             nama_lengkap = ?, nama_panggilan = ?, nik_siswa = ?, jenis_kelamin = ?, tempat_lahir = ?, tgl_lahir = ?, 
-                            agama = ?, status_yatim = ?, asal_sd = ?, alamat_sd = ?, asal_sekolah = ?, alamat_sekolah = ?, no_hp_siswa = ?, 
+                            agama = ?, status_yatim = ?, asal_sd = ?, alamat_sd = ?, asal_smp = ?, alamat_smp = ?, no_hp_siswa = ?, 
                             alamat_siswa = ?, nama_ayah = ?, nik_ayah = ?, pekerjaan_ayah = ?, nama_ibu = ?, nik_ibu = ?, pekerjaan_ibu = ?, 
                             nama_wali = ?, hubungan_wali = ?, id_jurusan_pilihan = ?, rekomendasi = ? 
                             WHERE id_pendaftar = ?";
-                            
+
             $stmt = $conn->prepare($sql_update_pendaftar);
-            $stmt->bind_param("sssssssssssssssssssssiisi", 
-                $nama_lengkap, $nama_panggilan, $nik_siswa, $jenis_kelamin, $tempat_lahir, $tgl_lahir, 
-                $agama, $status_yatim, $asal_sd, $alamat_sd, $asal_sekolah, $alamat_sekolah, $no_hp_siswa, 
-                $alamat_siswa, $nama_ayah, $nik_ayah, $pekerjaan_ayah, $nama_ibu, $nik_ibu, $pekerjaan_ibu, 
-                $nama_wali, $hubungan_wali, $id_jurusan_pilihan, $rekomendasi,
+            $stmt->bind_param(
+                "sssssssssssssssssssssiisi",
+                $nama_lengkap,
+                $nama_panggilan,
+                $nik_siswa,
+                $jenis_kelamin,
+                $tempat_lahir,
+                $tgl_lahir,
+                $agama,
+                $status_yatim,
+                $asal_sd,
+                $alamat_sd,
+                $asal_smp,
+                $alamat_smp,
+                $no_hp_siswa,
+                $alamat_siswa,
+                $nama_ayah,
+                $nik_ayah,
+                $pekerjaan_ayah,
+                $nama_ibu,
+                $nik_ibu,
+                $pekerjaan_ibu,
+                $nama_wali,
+                $hubungan_wali,
+                $id_jurusan_pilihan,
+                $rekomendasi,
                 $student_data['id_pendaftar']
             );
-            
-            if (!$stmt->execute()) { throw new Exception("Update Gagal: " . $stmt->error); }
+
+            if (!$stmt->execute()) {
+                throw new Exception("Update Gagal: " . $stmt->error);
+            }
             $stmt->close();
 
             $sql_update_status = "UPDATE pendaftar_status SET status_verifikasi = 'Menunggu Verifikasi (Revisi)' WHERE id_pendaftar = ?";
@@ -120,23 +143,110 @@ include 'includes/header.php';
 ?>
 
 <style>
-    :root { --primary-color: #4e73df; --success-color: #1cc88a; --dark-bg: #f8f9fc; }
-    .content-area { background-color: var(--dark-bg); padding: 40px 20px; font-family: 'Plus Jakarta Sans', sans-serif; }
-    .form-header-title { font-weight: 800; color: #2e3750; text-transform: uppercase; position: relative; display: inline-block; margin-bottom: 30px; }
-    .form-header-title::after { content: ''; position: absolute; width: 60%; height: 4px; background: var(--primary-color); bottom: -10px; left: 0; border-radius: 10px; }
-    .registration-card { border: none; border-radius: 15px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); }
-    .section-divider { border-left: 5px solid var(--primary-color); padding-left: 15px; margin-bottom: 25px; font-weight: 700; color: var(--primary-color); }
-    .form-label { font-weight: 700; color: #4e73df; font-size: 0.8rem; text-transform: uppercase; }
-    .form-control, .form-select { border-radius: 8px; padding: 12px; border: 1px solid #d1d3e2; background-color: #fff; }
-    .status-badge { font-size: 0.9rem; padding: 10px 20px; border-radius: 50px; font-weight: 700; }
-    .btn-save { background: linear-gradient(180deg, #1cc88a 10%, #13855c 100%); border: none; padding: 15px; font-weight: 700; border-radius: 10px; width: 100%; color: white; }
-    .btn-edit-trigger { background-color: #f6c23e; border: none; color: white; font-weight: 700; border-radius: 8px; padding: 8px 16px; }
-    .doc-link { display: inline-flex; align-items: center; padding: 10px 15px; background: #fff; border: 1px solid #d1d3e2; border-radius: 10px; text-decoration: none; color: #4e73df; font-weight: 600; transition: 0.2s; }
+    :root {
+        --primary-color: #4e73df;
+        --success-color: #1cc88a;
+        --dark-bg: #f8f9fc;
+    }
+
+    .content-area {
+        background-color: var(--dark-bg);
+        padding: 40px 20px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .form-header-title {
+        font-weight: 800;
+        color: #2e3750;
+        text-transform: uppercase;
+        position: relative;
+        display: inline-block;
+        margin-bottom: 30px;
+    }
+
+    .form-header-title::after {
+        content: '';
+        position: absolute;
+        width: 60%;
+        height: 4px;
+        background: var(--primary-color);
+        bottom: -10px;
+        left: 0;
+        border-radius: 10px;
+    }
+
+    .registration-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+    }
+
+    .section-divider {
+        border-left: 5px solid var(--primary-color);
+        padding-left: 15px;
+        margin-bottom: 25px;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .form-label {
+        font-weight: 700;
+        color: #4e73df;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 12px;
+        border: 1px solid #d1d3e2;
+        background-color: #fff;
+    }
+
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: 700;
+    }
+
+    .btn-save {
+        background: linear-gradient(180deg, #1cc88a 10%, #13855c 100%);
+        border: none;
+        padding: 15px;
+        font-weight: 700;
+        border-radius: 10px;
+        width: 100%;
+        color: white;
+    }
+
+    .btn-edit-trigger {
+        background-color: #f6c23e;
+        border: none;
+        color: white;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 8px 16px;
+    }
+
+    .doc-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 15px;
+        background: #fff;
+        border: 1px solid #d1d3e2;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #4e73df;
+        font-weight: 600;
+        transition: 0.2s;
+    }
 </style>
 
 <?php include 'includes/sidebar_siswa.php'; ?>
 
-<main class="content-area"> 
+<main class="content-area">
     <div class="container-fluid">
         <div class="row justify-content-center">
             <div class="col-xl-10 col-lg-12">
@@ -160,7 +270,7 @@ include 'includes/header.php';
                     <div class="card-body p-4 p-md-5">
                         <form action="riwayat_pendaftaran.php" method="post">
                             <input type="hidden" name="action" value="update">
-                            
+
                             <div class="section-divider">A. IDENTITAS CALON PESERTA DIDIK</div>
                             <div class="row g-4 mb-5">
                                 <div class="col-md-6">
@@ -181,12 +291,12 @@ include 'includes/header.php';
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Agama</label>
-                                    <?php if($read_only): ?>
+                                    <?php if ($read_only): ?>
                                         <input type="text" class="form-control" readonly value="<?php echo htmlspecialchars($student_data['agama'] ?? '-'); ?>">
                                     <?php else: ?>
                                         <select class="form-select" name="agama" required>
-                                            <?php $ag_list = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha']; 
-                                            foreach($ag_list as $v) {
+                                            <?php $ag_list = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha'];
+                                            foreach ($ag_list as $v) {
                                                 $sel = ($student_data['agama'] == $v) ? 'selected' : '';
                                                 echo "<option value='$v' $sel>$v</option>";
                                             } ?>
@@ -195,12 +305,12 @@ include 'includes/header.php';
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Status Keluarga</label>
-                                    <?php if($read_only): ?>
+                                    <?php if ($read_only): ?>
                                         <input type="text" class="form-control" readonly value="<?php echo htmlspecialchars($student_data['status_yatim'] ?? 'Tidak'); ?>">
                                     <?php else: ?>
                                         <select class="form-select" name="status_yatim" required>
-                                            <?php $sy_list = ['Tidak' => 'Lengkap', 'Yatim' => 'Yatim', 'Piatu' => 'Piatu', 'Yatim Piatu' => 'Yatim Piatu']; 
-                                            foreach($sy_list as $k => $v) {
+                                            <?php $sy_list = ['Tidak' => 'Lengkap', 'Yatim' => 'Yatim', 'Piatu' => 'Piatu', 'Yatim Piatu' => 'Yatim Piatu'];
+                                            foreach ($sy_list as $k => $v) {
                                                 $sel = ($student_data['status_yatim'] == $k) ? 'selected' : '';
                                                 echo "<option value='$k' $sel>$v</option>";
                                             } ?>
@@ -242,7 +352,7 @@ include 'includes/header.php';
                                         <input type="text" class="form-control" name="pekerjaan_ayah" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['pekerjaan_ayah'] ?? ''); ?>">
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-6 ps-md-4">
                                     <h6 class="fw-bold mb-3 text-dark"><i class="fas fa-female me-1"></i> Data Ibu</h6>
                                     <div class="mb-3">
@@ -268,7 +378,7 @@ include 'includes/header.php';
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Asal SMP/MTs</label>
-                                    <input type="text" class="form-control" name="asal_sekolah" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['asal_sekolah'] ?? ''); ?>">
+                                    <input type="text" class="form-control" name="asal_smp" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['asal_smp'] ?? ''); ?>">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Alamat SD/MI</label>
@@ -276,7 +386,7 @@ include 'includes/header.php';
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Alamat SMP/MTs</label>
-                                    <input type="text" class="form-control" name="alamat_sekolah" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['alamat_sekolah'] ?? ''); ?>">
+                                    <input type="text" class="form-control" name="alamat_smp" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['alamat_smp'] ?? ''); ?>">
                                 </div>
                             </div>
 
@@ -284,30 +394,33 @@ include 'includes/header.php';
                             <div class="row g-3 mb-5">
                                 <div class="col-md-12 mb-3">
                                     <div class="d-flex flex-wrap gap-2">
-                                        <?php 
+                                        <?php
                                         // DISESUAIKAN: Menambahkan SKL ke daftar berkas
                                         $files = [
-                                            'kk_file' => 'KK', 
-                                            'ktp_ortu_file' => 'KTP', 
-                                            'ijazah_sd_file' => 'Ijazah SD', 
-                                            'skl_file' => 'SKL SMP/MTs', 
+                                            'kk_file' => 'KK',
+                                            'ktp_ortu_file' => 'KTP',
+                                            'ijazah_sd_file' => 'Ijazah SD',
+                                            'skl_file' => 'SKL SMP/MTs',
                                             'foto_file' => 'Pas Foto'
                                         ];
-                                        foreach($files as $key => $lbl): if(!empty($student_data[$key])): ?>
-                                            <a href="uploads/<?php echo $student_data[$key]; ?>" target="_blank" class="doc-link">
-                                                <i class="fas fa-file-alt me-2"></i> Lihat <?php echo $lbl; ?>
-                                            </a>
-                                        <?php endif; endforeach; ?>
+                                        foreach ($files as $key => $lbl): if (!empty($student_data[$key])): ?>
+                                                <a href="uploads/<?php echo $student_data[$key]; ?>" target="_blank" class="doc-link">
+                                                    <i class="fas fa-file-alt me-2"></i> Lihat <?php echo $lbl; ?>
+                                                </a>
+                                        <?php endif;
+                                        endforeach; ?>
                                     </div>
                                     <p class="small text-muted mt-2">Catatan: Berkas dokumen hanya bisa diubah melalui pendaftaran ulang jika ada kesalahan fatal.</p>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label text-danger">Pilihan Jurusan</label>
-                                    <?php if($read_only): ?>
+                                    <?php if ($read_only): ?>
                                         <div class="p-3 border rounded-3 bg-light fw-bold text-dark">
-                                            <?php 
+                                            <?php
                                             $sel = $student_data['id_jurusan_pilihan'] ?? '';
-                                            foreach($jurusan_options as $j) { if($sel == $j['id_jurusan']) echo htmlspecialchars($j['nama_keahlian']); }
+                                            foreach ($jurusan_options as $j) {
+                                                if ($sel == $j['id_jurusan']) echo htmlspecialchars($j['nama_keahlian']);
+                                            }
                                             ?>
                                         </div>
                                     <?php else: ?>
@@ -315,9 +428,9 @@ include 'includes/header.php';
                                             <?php foreach ($jurusan_options as $jurusan): ?>
                                                 <div class="col-md-6">
                                                     <div class="form-check p-3 border rounded bg-white shadow-sm">
-                                                        <input class="form-check-input ms-1 me-3" type="radio" name="id_jurusan_pilihan" 
-                                                               value="<?php echo $jurusan['id_jurusan']; ?>" 
-                                                               <?php echo (($student_data['id_jurusan_pilihan'] ?? '') == $jurusan['id_jurusan']) ? 'checked' : ''; ?> required>
+                                                        <input class="form-check-input ms-1 me-3" type="radio" name="id_jurusan_pilihan"
+                                                            value="<?php echo $jurusan['id_jurusan']; ?>"
+                                                            <?php echo (($student_data['id_jurusan_pilihan'] ?? '') == $jurusan['id_jurusan']) ? 'checked' : ''; ?> required>
                                                         <label class="form-check-label fw-bold"><?php echo htmlspecialchars($jurusan['nama_keahlian']); ?></label>
                                                     </div>
                                                 </div>
@@ -325,10 +438,10 @@ include 'includes/header.php';
                                         </div>
                                     <?php endif; ?>
                                 </div>
-                                <div class="col-md-12 mt-3">
+                                <!-- <div class="col-md-12 mt-3">
                                     <label class="form-label">Rekomendasi Dari</label>
                                     <input type="text" class="form-control" name="rekomendasi" <?php echo $read_only ? 'readonly' : ''; ?> value="<?php echo htmlspecialchars($student_data['rekomendasi'] ?? ''); ?>">
-                                </div>
+                                </div> -->
                             </div>
 
                             <?php if (!$read_only): ?>

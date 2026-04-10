@@ -161,7 +161,7 @@ function getCurrentUser() {
 function getStudentFullData($conn, $id_user) {
     // Query JOIN untuk mengambil data user, pendaftar, dan status verifikasi
     $sql = "SELECT u.username, u.nama_lengkap AS user_nama, 
-                   p.*, ps.*, j.nama_keahlian FROM users u
+                   p.*, ps.*, pb.*, po.*, pp.*, j.nama_keahlian FROM users u
             JOIN pendaftar p ON u.id_pendaftar = p.id_pendaftar
             JOIN pendaftar_ortu po ON p.id_pendaftar = po.id_pendaftar
             JOIN pendaftar_berkas pb ON p.id_pendaftar = pb.id_pendaftar

@@ -319,6 +319,18 @@ include 'includes/sidebar_siswa.php';
                                         <input type="text" class="form-control" name="pekerjaan_ibu" value="<?= htmlspecialchars($_POST['pekerjaan_ibu'] ?? '') ?>" required>
                                     </div>
                                 </div>
+
+                                <div class="col-md-6 ps-md-4">
+                                    <h6 class="fw-bold mb-3 text-dark"><i class="fas fa-male me-1"></i> Data Wali</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nama Wali</label>
+                                        <input type="text" class="form-control" name="nama_Wali" value="<?php echo htmlspecialchars($student_data['nama_Wali'] ?? ''); ?>">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Hubungan Wali</label>
+                                        <input type="text" class="form-control" name="hubungan_wali" value="<?php echo htmlspecialchars($student_data['Hubungan_Wali'] ?? ''); ?>">
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="section-divider h5 text-uppercase">D. Unggah Berkas & Dokumen</div>

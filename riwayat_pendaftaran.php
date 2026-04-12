@@ -65,19 +65,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         $nama_wali = trim($_POST['nama_wali'] ?? '');
         $hubungan_wali = trim($_POST['hubungan_wali'] ?? '');
         $id_jurusan_pilihan = $_POST['id_jurusan_pilihan'] ?? '';
-        $rekomendasi = trim($_POST['rekomendasi'] ?? '');
+        // $rekomendasi = trim($_POST['rekomendasi'] ?? '');
 
         try {
             $sql_update_pendaftar = "UPDATE pendaftar SET 
                             nama_lengkap = ?, nama_panggilan = ?, nik_siswa = ?, jenis_kelamin = ?, tempat_lahir = ?, tgl_lahir = ?, 
-                            agama = ?, status_yatim = ?, asal_sd = ?, alamat_sd = ?, asal_smp = ?, alamat_smp = ?, no_hp_siswa = ?, 
-                            alamat_siswa = ?, nama_ayah = ?, nik_ayah = ?, pekerjaan_ayah = ?, nama_ibu = ?, nik_ibu = ?, pekerjaan_ibu = ?, 
-                            nama_wali = ?, hubungan_wali = ?, id_jurusan_pilihan = ?, rekomendasi = ? 
+                            agama = ?, status_yatim = ?, no_hp_siswa = ?, alamat_siswa = ?, id_jurusan_pilihan = ? 
                             WHERE id_pendaftar = ?";
 
             $stmt = $conn->prepare($sql_update_pendaftar);
             $stmt->bind_param(
-                "sssssssssssssssssssssiisi",
+                "ssssssssssis",
                 $nama_lengkap,
                 $nama_panggilan,
                 $nik_siswa,
@@ -86,29 +84,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                 $tgl_lahir,
                 $agama,
                 $status_yatim,
-                $asal_sd,
-                $alamat_sd,
-                $asal_smp,
-                $alamat_smp,
                 $no_hp_siswa,
                 $alamat_siswa,
-                $nama_ayah,
-                $nik_ayah,
-                $pekerjaan_ayah,
-                $nama_ibu,
-                $nik_ibu,
-                $pekerjaan_ibu,
-                $nama_wali,
-                $hubungan_wali,
                 $id_jurusan_pilihan,
-                $rekomendasi,
                 $student_data['id_pendaftar']
             );
 
             if (!$stmt->execute()) {
-                throw new Exception("Update Gagal: " . $stmt->error);
+                throw new Exception("Update Pendaftar Gagal: " . $stmt->error);
             }
             $stmt->close();
+
+            $sql_update_ortu = "UPDATE pendaftar_ortu SET nama_ayah = ?, nik_ayah = ?, pekerjaan_ayah = ?, nama_ibu = ?, nik_ibu = ?, pekerjaan_ibu = ?, nama_wali = ?, hubungan_wali = ? WHERE id_pendaftar = ?";
+            $stmt_ortu = $conn->prepare($sql_update_ortu);
+            $stmt_ortu->bind_param("ssssssssi", $nama_ayah, $nik_ayah, $pekerjaan_ayah, $nama_ibu, $nik_ibu, $pekerjaan_ibu, $nama_wali, $hubungan_wali, $student_data['id_pendaftar']);
+            if (!$stmt_ortu->execute()) {
+                throw new Exception("Update Ortu Gagal: " . $stmt_ortu->error);
+            }
+            $stmt_ortu->close();
+
+            $sql_update_pendidikan = "UPDATE pendaftar_pendidikan SET asal_sd = ?, alamat_sd = ?, asal_smp = ?, alamat_smp = ? WHERE id_pendaftar = ?";
+            $stmt_pend = $conn->prepare($sql_update_pendidikan);
+            $stmt_pend->bind_param("ssssi", $asal_sd, $alamat_sd, $asal_smp, $alamat_smp, $student_data['id_pendaftar']);
+            if (!$stmt_pend->execute()) {
+                throw new Exception("Update Pendidikan Gagal: " . $stmt_pend->error);
+            }
+            $stmt_pend->close();
 
             $sql_update_status = "UPDATE pendaftar_status SET status_verifikasi = 'Menunggu Verifikasi (Revisi)' WHERE id_pendaftar = ?";
             $stmt_status = $conn->prepare($sql_update_status);
@@ -318,8 +319,11 @@ include 'includes/header.php';
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">WhatsApp Siswa</label>
-                                    <input type="text" class="form-control" name="no_hp_siswa" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['no_hp_siswa'] ?? ''); ?>">
+                                    <label class="form-label">Jenis Kelamin</label>
+                                    <select class="form-select" name="jenis_kelamin" required>
+                                        <option value="L" <?= (($student_data['jenis_kelamin'] ?? '') == 'L') ? 'selected' : ''; ?>>Laki-laki</option>
+                                        <option value="P" <?= (($student_data['jenis_kelamin'] ?? '') == 'P') ? 'selected' : ''; ?>>Perempuan</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Tempat Lahir</label>
@@ -328,6 +332,10 @@ include 'includes/header.php';
                                 <div class="col-md-6">
                                     <label class="form-label">Tanggal Lahir</label>
                                     <input type="date" class="form-control" name="tgl_lahir" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['tgl_lahir'] ?? ''); ?>">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">WhatsApp Siswa</label>
+                                    <input type="text" class="form-control" name="no_hp_siswa" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['no_hp_siswa'] ?? ''); ?>">
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Alamat Lengkap Siswa</label>
@@ -366,6 +374,18 @@ include 'includes/header.php';
                                     <div class="mb-3">
                                         <label class="form-label">Pekerjaan Ibu</label>
                                         <input type="text" class="form-control" name="pekerjaan_ibu" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['pekerjaan_ibu'] ?? ''); ?>">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 ps-md-4">
+                                    <h6 class="fw-bold mb-3 text-dark"><i class="fas fa-male me-1"></i> Data Wali</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nama Wali</label>
+                                        <input type="text" class="form-control" name="nama_wali" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['nama_wali'] ?? ''); ?>">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Hubungan Wali</label>
+                                        <input type="text" class="form-control" name="hubungan_wali" <?php echo $read_only ? 'readonly' : 'required'; ?> value="<?php echo htmlspecialchars($student_data['hubungan_wali'] ?? ''); ?>">
                                     </div>
                                 </div>
                             </div>
